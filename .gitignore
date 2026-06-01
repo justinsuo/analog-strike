@@ -1,0 +1,30 @@
+# Unreal Engine build/cache output — generated, never commit
+Binaries/
+Intermediate/
+Saved/
+DerivedDataCache/
+
+# Build artifacts
+*.VC.db
+*.opensdf
+*.sdf
+*.sln
+*.xcodeproj/
+*.xcworkspace/
+*.suo
+*.opendb
+
+# macOS / IDE noise
+.DS_Store
+.vs/
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+
+# Large generated terrain files (regenerated from tools/procgen/gen_terrain.py)
+# Keep these out of git — they're 12MB and reproducible
+*.obj
+docs/heightmaps/
