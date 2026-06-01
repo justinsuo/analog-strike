@@ -83,7 +83,8 @@ for a in editor.get_all_level_actors():
 if not terrain:
     for a in editor.get_all_level_actors():
         smc = a.get_component_by_class(unreal.StaticMeshComponent)
-        if smc and smc.get_static_mesh() and "as_terrain" in smc.get_static_mesh().get_name().lower():
+        sm = smc.get_editor_property("static_mesh") if smc else None
+        if sm and "as_terrain" in sm.get_name().lower():
             terrain = a; break
 if terrain:
     smc = terrain.get_component_by_class(unreal.StaticMeshComponent)

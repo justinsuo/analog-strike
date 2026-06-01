@@ -64,8 +64,10 @@ for a in all_actors:
     smc = a.get_component_by_class(unreal.StaticMeshComponent)
     mesh_name = None
     if smc:
-        sm = smc.get_static_mesh()
-        if sm: mesh_name = sm.get_name()
+        try:
+            sm = smc.get_editor_property("static_mesh")
+            if sm: mesh_name = sm.get_name()
+        except Exception: pass
     state["actors"].append({
         "label": label, "class": cls,
         "x": round(loc.x,1), "y": round(loc.y,1), "z": round(loc.z,1),
