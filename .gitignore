@@ -28,3 +28,7 @@ __pycache__/
 # Keep these out of git — they're 12MB and reproducible
 *.obj
 docs/heightmaps/
+
+# Snapshot pipeline noise — keep state.json / screenshots / layout / log_tail
+claude/snapshot/raw_shots/
+claude/snapshot/_editor_run.log
