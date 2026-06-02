@@ -2,11 +2,25 @@
 
 A third-person tactical shooter built in **Unreal Engine 5.7**. The premise: rogue robots control every digital system, so the player is a heavily-augmented operative who has to reclaim machine-controlled facilities using *physical* means only — no hacking, no AI assistance, no smart tech.
 
-## Open-World Map (v2 — comprehensive)
+## Open-World Map (v3 — vast & organic)
 
-The world is **procedurally generated**: a **~800 m** mountain-ringed basin with **11 settlements** linked by a road network, plus real terrain features — **two lakes**, a **river** winding NW → SE through the basin, a **canyon** to the east, and a **glacial peak** in the northern range.
+The world is **procedurally generated** and no longer reads as a designed bowl — it's a continuous **1.5 km × 1.5 km** landscape where mountain ridges, foothills, valleys, and lowlands emerge organically from layered fractal + ridged noise. Mountains run in every direction with no artificial boundary; the 11 settlements sit on flat pads carved into the wider wilderness.
 
-![Open world v2 — 800 m, 11 settlements, river + 2 lakes + canyon](docs/images/open_world_v2.png)
+![v3 heightmap — organic continuous terrain, no bowl](docs/images/terrain_v3_heightmap.png)
+*Cyan = three lakes, blue line winds through = river, white = snow peaks, green = lowlands. Notice mountain chains continuing in every direction.*
+
+![v3 iso preview — 1.5 km world, 11 settlements scattered across the wilderness](docs/images/open_world_v3.png)
+
+**Terrain features:** 3 lakes, a meandering NW→SE river, two carved canyons, snow-capped peaks scattered organically, ridged mountain chains running in multiple directions.
+
+## Previous iterations
+
+<details>
+<summary>v2 — 800 m mountain-ringed basin</summary>
+
+![Open world v2 — 800 m](docs/images/open_world_v2.png)
+![v2 heightmap](docs/images/terrain_v2_heightmap.png)
+</details>
 
 ### Settlements
 
@@ -24,16 +38,24 @@ The world is **procedurally generated**: a **~800 m** mountain-ringed basin with
 | **Fuel Depot** *(new)* | Four cylindrical fuel tanks ringed by a wall + towers. |
 | **Memorial** *(new)* | Open plaza with a central monument and rows of markers. |
 
-### Terrain
+### Terrain construction (v3)
 
-Fractal value-noise base + ridged peaks for the boundary rim and north range, sculpted by a river carve, two gaussian lake basins, and a deep canyon notch. Building pads are smoothstep-flattened so structures sit on level ground while the surrounding terrain stays varied.
+`tools/procgen/gen_terrain.py` builds the heightmap from:
 
-![Heightmap](docs/images/terrain_v2_heightmap.png)
-*Cyan = lakes, blue/green = basin floor, brown = foothills, white = snow peaks. The small dark dot in the east is the canyon.*
+1. **Biome amplitude** — very-low-frequency fractal noise (4 octaves) that decides how mountainous each region is. No radial mask, so mountains and lowlands distribute naturally everywhere.
+2. **Rolling base** — medium-frequency 9-octave fractal noise for gentle rolling hills.
+3. **Ridged ridges** — two layers of ridged noise multiplied by the biome amplitude, producing sharp mountain chains in mountainous regions and almost nothing in lowland regions.
+4. **Valley network** — a long-wavelength carve that subtly tracks natural valleys.
+5. **River + 3 lakes + 2 canyons** — line-distance and gaussian carving on top of the base.
+6. **Settlement pads** — smoothstep-flatten to a circle around each POI center so buildings have level ground.
 
-#### Earlier v1 layout (~500 m, 6 settlements)
+The result: 1.5 km of varied terrain you could traverse for ~4 minutes at running speed without seeing the edge.
+
+<details>
+<summary>v1 layout (~500 m, 6 settlements)</summary>
 
 ![v1](docs/images/open_world_preview.png)
+</details>
 
 ## What's in the box
 
