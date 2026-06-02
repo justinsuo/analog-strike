@@ -16,27 +16,48 @@ editor = unreal.EditorLevelLibrary
 level_sub = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
 level_sub.load_level("/Game/AnalogStrike/Maps/OpenWorld")
 
-PROTO = os.path.expanduser("~/Downloads/kenney_models/prototype-kit/extracted")
-TD = os.path.expanduser("~/Downloads/kenney_models/tower-defense-kit/extracted")
-DEST = "/Game/AnalogStrike/MapKit"
+KIT = lambda name: os.path.expanduser(f"~/Downloads/kenney_models/{name}")
+PROTO   = KIT("prototype-kit/extracted")
+TD      = KIT("tower-defense-kit/extracted")
+NATURE  = KIT("nature-kit")
+ROADS   = KIT("city-kit-roads")
+DEST    = "/Game/AnalogStrike/MapKit"
 
 def find_fbx_dir(base):
     for root, dirs, files in os.walk(base):
         if any(f.endswith(".fbx") for f in files):
             return root
     return None
-proto_dir = find_fbx_dir(PROTO)
-td_dir = find_fbx_dir(TD)
+proto_dir  = find_fbx_dir(PROTO)
+td_dir     = find_fbx_dir(TD)
+nature_dir = find_fbx_dir(NATURE)
+road_dir   = find_fbx_dir(ROADS)
 
 # ── Import the kit pieces ──
 needed = {
+    # Prototype kit — buildings
     "wall": proto_dir, "wall-corner": proto_dir, "wall-doorway-wide": proto_dir,
     "wall-window-large": proto_dir, "wall-low": proto_dir, "floor-square": proto_dir,
     "floor-thick": proto_dir, "column": proto_dir, "stairs": proto_dir,
     "crate": proto_dir, "crate-color": proto_dir, "door-sliding": proto_dir,
+    # Tower defense — base trees/rocks (kept as fallback)
     "detail-tree-large": td_dir, "detail-tree": td_dir,
     "detail-rocks-large": td_dir, "detail-rocks": td_dir, "detail-crystal": td_dir,
+    # Nature kit — 8 tree variants, multiple rocks (much more variety)
+    "tree_default": nature_dir, "tree_oak": nature_dir, "tree_fat": nature_dir,
+    "tree_cone": nature_dir, "tree_detailed": nature_dir, "tree_palmTall": nature_dir,
+    "tree_default_dark": nature_dir, "tree_oak_dark": nature_dir, "tree_fat_dark": nature_dir,
+    "rock_largeA": nature_dir, "rock_largeB": nature_dir, "rock_largeC": nature_dir,
+    "rock_smallA": nature_dir, "rock_smallB": nature_dir, "rock_smallC": nature_dir,
+    # City roads kit — real road segments + streetlamps + bridges
+    "road-straight": road_dir, "road-bend": road_dir, "road-crossroad": road_dir,
+    "road-intersection": road_dir, "road-bridge": road_dir,
+    "light-square": road_dir, "light-curved": road_dir, "construction-barrier": road_dir,
 }
+NATURE_TREES = ["tree_default", "tree_oak", "tree_fat", "tree_cone", "tree_detailed",
+                "tree_default_dark", "tree_oak_dark", "tree_fat_dark", "tree_palmTall"]
+NATURE_ROCKS_LARGE = ["rock_largeA", "rock_largeB", "rock_largeC"]
+NATURE_ROCKS_SMALL = ["rock_smallA", "rock_smallB", "rock_smallC"]
 mesh_cache = {}
 def import_piece(name, src_dir):
     if name in mesh_cache: return mesh_cache[name]
@@ -140,18 +161,31 @@ def build_building(cx, cy, cols, rows, door_side=0, ruined=False, floor_z=None):
         for sy in (-1, 1):
             place_raw("column", cx+sx*(half_w+TILE/2), cy+sy*(half_d+TILE/2), floor_z, 0)
 
-# ── Roads ──
+# ── Roads ── use real road-straight segments from city-kit-roads + streetlamps
+# Falls back to floor-square tiles if the road kit didn't import.
 def road(x1, y1, x2, y2, width_tiles=2):
     dist = math.hypot(x2-x1, y2-y1)
     steps = max(1, int(dist/(TILE*0.9)))
     dx, dy = (x2-x1)/steps, (y2-y1)/steps
+    angle = math.degrees(math.atan2(dy, dx))
     plen = math.hypot(dx, dy) or 1
     perp = (-dy/plen, dx/plen)
+    has_road_kit = mesh_cache.get("road-straight") is not None
+    has_lamp_kit = mesh_cache.get("light-square") is not None
     for s in range(steps+1):
         rx, ry = x1+dx*s, y1+dy*s
-        for w in range(width_tiles):
-            off = (w-(width_tiles-1)/2)*TILE
-            place("floor-square", rx+perp[0]*off, ry+perp[1]*off, 4, 0, scale=SCALE)
+        if has_road_kit:
+            # One real road-straight oriented along the road, tile-spaced
+            place("road-straight", rx, ry, 6, angle, scale=SCALE)
+        else:
+            # Floor-tile fallback (old behaviour)
+            for w in range(width_tiles):
+                off = (w-(width_tiles-1)/2)*TILE
+                place("floor-square", rx+perp[0]*off, ry+perp[1]*off, 4, 0, scale=SCALE)
+        # Streetlamp every 6 tiles along the side of the road
+        if has_lamp_kit and s > 0 and s % 6 == 0:
+            lx = rx + perp[0]*TILE*1.2; ly = ry + perp[1]*TILE*1.2
+            place("light-square", lx, ly, 0, angle, scale=SCALE)
 
 def crates(cx, cy, rad, count=6):
     for _ in range(count):
@@ -355,16 +389,26 @@ def in_lake(x, y):
         if math.hypot(x-L["x"], y-L["y"]) < L["r"]*0.85:
             return True
     return False
+# Use nature-kit's variety if it imported, otherwise fall back to tower-defense pieces
+have_nature = mesh_cache.get("tree_oak") is not None
 for _ in range(VEG_COUNT):
     x = random.uniform(-HALF*0.92, HALF*0.92); y = random.uniform(-HALF*0.92, HALF*0.92)
     if near_poi(x, y) or in_lake(x, y): continue
     roll = random.random()
-    if roll < 0.55:
-        t = "detail-tree-large" if random.random()<0.5 else "detail-tree"
-        place(t, x, y, 0, random.uniform(0,360), scale=SCALE*random.uniform(1.5,3.0))
-    elif roll < 0.85:
-        r = "detail-rocks-large" if random.random()<0.4 else "detail-rocks"
-        place(r, x, y, 0, random.uniform(0,360), scale=SCALE*random.uniform(1.8,3.5))
+    if roll < 0.60:
+        if have_nature:
+            t = random.choice(NATURE_TREES)
+            place(t, x, y, 0, random.uniform(0,360), scale=SCALE*random.uniform(1.2, 2.4))
+        else:
+            t = "detail-tree-large" if random.random()<0.5 else "detail-tree"
+            place(t, x, y, 0, random.uniform(0,360), scale=SCALE*random.uniform(1.5, 3.0))
+    elif roll < 0.88:
+        if have_nature:
+            r = random.choice(NATURE_ROCKS_LARGE if random.random()<0.4 else NATURE_ROCKS_SMALL)
+            place(r, x, y, 0, random.uniform(0,360), scale=SCALE*random.uniform(1.4, 2.8))
+        else:
+            r = "detail-rocks-large" if random.random()<0.4 else "detail-rocks"
+            place(r, x, y, 0, random.uniform(0,360), scale=SCALE*random.uniform(1.8, 3.5))
 
 level_sub.save_current_level()
 unreal.log("══════════════════════════════════════════")

@@ -107,6 +107,37 @@ python3 tools/procgen/gen_terrain.py
 
 The build script reads the Kenney modular building kit from `~/Downloads/kenney_models/`. Grab the [prototype kit](https://kenney.nl/assets/prototype-kit) and [tower defense kit](https://kenney.nl/assets/tower-defense-kit) (both CC0).
 
+## Asset library (CC0 — fetch yourself, not redistributed in this repo)
+
+The procgen pipeline uses Kenney's CC0 modular kits. Download whichever you want into `~/Downloads/kenney_models/<slug>/` (they're freely available from `kenney.nl` or the OpenGameArt mirror):
+
+| Kit | Models | What it's for |
+| --- | --- | --- |
+| **prototype-kit** | 145 | Walls / floors / doors / windows / columns — building construction |
+| **tower-defense-kit** | 160 | Base detail meshes (trees, rocks, crystals) — fallback |
+| **nature-kit** | 329 | 9 tree variants × 3 color modes (oak / fat / cone / palm…), 12+ rock variants — the rich vegetation set |
+| **city-kit-roads** | 72 | Real road-straight / bend / intersection / bridge segments, streetlamps, barriers |
+| **city-kit-suburban / commercial** | 80 | Real-looking residential + commercial buildings (next-pass integration) |
+| **modular-buildings** | 108 | More building variations |
+| **platformer-kit, pirate-kit, holiday-kit, modular-dungeon-kit** | 783 | Extra prop / dungeon pieces |
+
+The build script auto-detects which kits are present and falls back gracefully if the nature/road kits are missing (using the older tower-defense detail meshes instead). So you can run with just `prototype-kit` + `tower-defense-kit` for a minimum build, or load up more kits for richer scenery.
+
+## References & inspiration
+
+Open-source UE5 projects that informed parts of this build (all MIT or compatible):
+
+- **[tomlooman/SimpleFPSTemplate](https://github.com/tomlooman/SimpleFPSTemplate)** — clean C++ FPS template, MIT, 677 ★. High-quality reference for weapon + AI patterns.
+- **[jiayaozhang/UE5-CPP-Shooter-Series](https://github.com/jiayaozhang/UE5-CPP-Shooter-Series)** — UE5 C++ shooter with behavior-tree AI, MIT.
+- **[midgen/cashgenUE](https://github.com/midgen/cashgenUE)** — runtime procedural terrain for UE, MIT, 477 ★. Reference for chunk-streaming terrain (this game uses a single static-mesh terrain instead).
+- **[XyonX/UEMannequinTemplate](https://github.com/XyonX/UEMannequinTemplate)** — UE4/UE5 mannequin skeleton + meshes, MIT.
+
+Real-world heightmap sources if you want to swap the procedural terrain for actual locations:
+
+- **[manticorp Unreal Heightmap Generator](https://manticorp.github.io/unrealheightmap/)** — browser tool, outputs 16-bit PNGs sized for UE landscape, Mapbox-backed
+- **[terrain.party](https://terrain.party/)** — pick any 60×60 km region worldwide
+- **[USGS National Map](https://apps.nationalmap.gov/downloader/)** — free 1m DEMs (USA)
+
 ## License
 
-Game code: MIT. Kenney art assets used during development are CC0 and are not redistributed in this repo — fetch them yourself from kenney.nl.
+Game code: MIT. Kenney art assets used during development are CC0 — fetch them yourself.
