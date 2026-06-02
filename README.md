@@ -2,15 +2,38 @@
 
 A third-person tactical shooter built in **Unreal Engine 5.7**. The premise: rogue robots control every digital system, so the player is a heavily-augmented operative who has to reclaim machine-controlled facilities using *physical* means only — no hacking, no AI assistance, no smart tech.
 
-## Open-World Map
+## Open-World Map (v2 — comprehensive)
 
-The world is **procedurally generated** — a ~500 m mountain-ringed basin with a central main base, five outlying settlements (forward outpost, ruined town, research station, checkpoint gatehouse, mountain bunker), a lake, and a road network linking everything. Buildings are assembled from a modular kit (walls / floors / doors / windows / columns) at each settlement, with vegetation and rock scatter filling the space between.
+The world is **procedurally generated**: a **~800 m** mountain-ringed basin with **11 settlements** linked by a road network, plus real terrain features — **two lakes**, a **river** winding NW → SE through the basin, a **canyon** to the east, and a **glacial peak** in the northern range.
 
-![Open-world layout](docs/images/open_world_preview.png)
+![Open world v2 — 800 m, 11 settlements, river + 2 lakes + canyon](docs/images/open_world_v2.png)
 
-The terrain is generated from layered fractal noise + radial mountain rim + ridge noise + flattened building pads:
+### Settlements
 
-![Terrain heightmap](docs/images/terrain_heightmap.png)
+| Settlement | Role |
+| --- | --- |
+| **Main Base** | Player spawn / hub. Command center + barracks + warehouses + motor pool. Walled. |
+| **Forward Outpost** | Small recon position with a watchtower. |
+| **Ruined Town** | Scattered partially-collapsed buildings — guerilla combat. |
+| **Research Station** | Labs with antenna pillars; walled. |
+| **Checkpoint** | Gatehouse on the south road. |
+| **Mountain Bunker** | Fortified in the foothills. |
+| **Quarry** *(new)* | Industrial site with a rock pile and equipment. |
+| **Comm Array** *(new)* | Comms relay with three tall antenna stacks. |
+| **Crash Site** *(new)* | Long downed-aircraft fuselage and debris trail. |
+| **Fuel Depot** *(new)* | Four cylindrical fuel tanks ringed by a wall + towers. |
+| **Memorial** *(new)* | Open plaza with a central monument and rows of markers. |
+
+### Terrain
+
+Fractal value-noise base + ridged peaks for the boundary rim and north range, sculpted by a river carve, two gaussian lake basins, and a deep canyon notch. Building pads are smoothstep-flattened so structures sit on level ground while the surrounding terrain stays varied.
+
+![Heightmap](docs/images/terrain_v2_heightmap.png)
+*Cyan = lakes, blue/green = basin floor, brown = foothills, white = snow peaks. The small dark dot in the east is the canyon.*
+
+#### Earlier v1 layout (~500 m, 6 settlements)
+
+![v1](docs/images/open_world_preview.png)
 
 ## What's in the box
 

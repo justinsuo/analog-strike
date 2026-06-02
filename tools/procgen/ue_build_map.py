@@ -239,16 +239,87 @@ def settle_checkpoint(cx, cy):
 def settle_bunker(cx, cy):
     build_building(cx, cy, 4, 4, door_side=0)            # fortified
     perimeter(cx, cy, 1500, towers=True)
-    # sandbag-like crate walls
     for ad in range(0, 360, 30):
         a=math.radians(ad); x=cx+math.cos(a)*1100; y=cy+math.sin(a)*1100
         place_raw("crate", x, y, ground_z(x,y), math.degrees(a), scale=SCALE*0.6)
     crates(cx, cy, 700, 5)
 
+def settle_quarry(cx, cy):
+    # Open pit with industrial buildings
+    build_building(cx-1200, cy-1000, 5, 4, door_side=2)
+    build_building(cx+1400, cy+800, 4, 3, door_side=1)
+    # Lots of rocks scattered (the quarry pile)
+    for _ in range(28):
+        x = cx + random.uniform(-1800, 1800); y = cy + random.uniform(-1800, 1800)
+        if math.hypot(x-cx, y-cy) < 700: continue  # leave pit area clear
+        r = "detail-rocks-large" if random.random()<0.5 else "detail-rocks"
+        place(r, x, y, 0, random.uniform(0,360), scale=SCALE*random.uniform(1.5, 3.2))
+    crates(cx, cy, 1200, 8)
+
+def settle_comm_array(cx, cy):
+    # Small command + tall antenna stack
+    build_building(cx, cy, 3, 3, door_side=0)
+    build_building(cx-1100, cy+800, 3, 3, door_side=3)
+    # Antenna: 6 stacked columns (tall)
+    for (ax, ay) in [(cx+1300, cy), (cx+1100, cy-1200), (cx-1300, cy-800)]:
+        bz = ground_z(ax, ay)
+        for hi in range(6):
+            place_raw("column", ax, ay, bz + hi*TILE, 0, scale=SCALE*0.9)
+        place_raw("floor-thick", ax, ay, bz + 6*TILE, 0, scale=SCALE*0.6)
+    perimeter(cx, cy, 1600, towers=False)
+
+def settle_crash_site(cx, cy):
+    # Long debris trail of "wreckage" via tilted floor-thick / wall-low pieces
+    for k in range(8):
+        dx = -1400 + k*420
+        dy = random.uniform(-300, 300)
+        dz = ground_z(cx+dx, cy+dy)
+        # tilted wall-low chunks = debris
+        place_raw("wall-low", cx+dx, cy+dy, dz, random.uniform(0, 360), scale=SCALE*random.uniform(0.6, 1.3))
+    # Main fuselage: a long building with no walls
+    build_building(cx, cy, 6, 2, ruined=True, door_side=0)
+    # Smoke columns (use tall thin columns as smoke poles)
+    for _ in range(5):
+        x = cx + random.uniform(-1500, 1500); y = cy + random.uniform(-800, 800)
+        place_raw("column", x, y, ground_z(x,y), 0, scale=SCALE*0.4)
+    crates(cx, cy, 1200, 6)
+
+def settle_fuel_depot(cx, cy):
+    # Central command + 4 cylindrical fuel tanks at the cardinal points
+    build_building(cx, cy, 3, 3, door_side=0)
+    for ad in (0, 90, 180, 270):
+        a = math.radians(ad); tx = cx + math.cos(a)*1100; ty = cy + math.sin(a)*1100
+        bz = ground_z(tx, ty)
+        # Tank = 3 stacked columns with a floor cap (improvised fuel tank look)
+        for hi in range(3):
+            place_raw("column", tx, ty, bz + hi*TILE, 0, scale=SCALE*1.8)
+        place_raw("floor-thick", tx, ty, bz + 3*TILE, 0, scale=SCALE*2.2)
+    perimeter(cx, cy, 1800, towers=True)
+    crates(cx, cy, 900, 6)
+
+def settle_memorial(cx, cy):
+    # Open plaza with column "monument" rows
+    floor_z = ground_z(cx, cy)
+    # 5x5 plaza floor
+    for i in range(-2, 3):
+        for j in range(-2, 3):
+            place_raw("floor-thick", cx + i*TILE, cy + j*TILE, floor_z, 0)
+    # Central tall pillar
+    for hi in range(5):
+        place_raw("column", cx, cy, floor_z + hi*TILE, 0, scale=SCALE*1.4)
+    # Two rows of memorial markers (small columns) flanking the central pillar
+    for i in range(-3, 4):
+        if i == 0: continue
+        place_raw("column", cx + i*TILE*0.8, cy - TILE*2, floor_z, 0, scale=SCALE*0.6)
+        place_raw("column", cx + i*TILE*0.8, cy + TILE*2, floor_z, 0, scale=SCALE*0.6)
+
 BUILDERS = {
     "MainBase": settle_main_base, "ForwardOutpost": settle_outpost,
     "RuinedTown": settle_ruined_town, "ResearchStation": settle_research,
     "Checkpoint": settle_checkpoint, "MountainBunker": settle_bunker,
+    "Quarry": settle_quarry, "CommArray": settle_comm_array,
+    "CrashSite": settle_crash_site, "FuelDepot": settle_fuel_depot,
+    "Memorial": settle_memorial,
 }
 
 # ──────────────────────────────────────────────────────────────────────
@@ -276,9 +347,17 @@ def near_poi(x, y):
             return True
     return False
 HALF = (_TH["world"]/2) if _TH else 25000
-for _ in range(400):
+# Scatter scales with world area — bigger map needs more vegetation density to feel alive
+VEG_COUNT = int((HALF/25000)**2 * 400) + 400   # ~1400 on 800m map, ~400 on 500m
+LAKES = _TH.get("lakes", []) if _TH else []
+def in_lake(x, y):
+    for L in LAKES:
+        if math.hypot(x-L["x"], y-L["y"]) < L["r"]*0.85:
+            return True
+    return False
+for _ in range(VEG_COUNT):
     x = random.uniform(-HALF*0.92, HALF*0.92); y = random.uniform(-HALF*0.92, HALF*0.92)
-    if near_poi(x, y): continue
+    if near_poi(x, y) or in_lake(x, y): continue
     roll = random.random()
     if roll < 0.55:
         t = "detail-tree-large" if random.random()<0.5 else "detail-tree"
