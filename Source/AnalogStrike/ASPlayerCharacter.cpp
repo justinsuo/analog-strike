@@ -34,7 +34,7 @@ AASPlayerCharacter::AASPlayerCharacter()
 
     // Use Quinn mesh (different look from default Manny)
     static ConstructorHelpers::FObjectFinder<USkeletalMesh> QuinnMesh(
-        TEXT("/Game/Characters/Meshes/SKM_Quinn_Simple"));
+        TEXT("/Game/Characters/Meshes/SKM_Quinn_Simple.SKM_Quinn_Simple"));
     if (QuinnMesh.Succeeded())
     {
         GetMesh()->SetSkeletalMesh(QuinnMesh.Object);
@@ -43,14 +43,14 @@ AASPlayerCharacter::AASPlayerCharacter()
     {
         // Fallback to Manny
         static ConstructorHelpers::FObjectFinder<USkeletalMesh> MannyMesh(
-            TEXT("/Game/Characters/Meshes/SKM_Manny_Simple"));
+            TEXT("/Game/Characters/Meshes/SKM_Manny_Simple.SKM_Manny_Simple"));
         if (MannyMesh.Succeeded())
             GetMesh()->SetSkeletalMesh(MannyMesh.Object);
     }
 
     // Rifle animation blueprint — makes character hold weapons properly
     static ConstructorHelpers::FClassFinder<UAnimInstance> RifleABP(
-        TEXT("/Game/Characters/Anims/Shooter/ABP_TP_Rifle"));
+        TEXT("/Game/Characters/Anims/Shooter/ABP_TP_Rifle.ABP_TP_Rifle_C"));
     if (RifleABP.Class)
     {
         GetMesh()->SetAnimInstanceClass(RifleABP.Class);
@@ -59,7 +59,7 @@ AASPlayerCharacter::AASPlayerCharacter()
     {
         // Try Variant_Shooter path
         static ConstructorHelpers::FClassFinder<UAnimInstance> RifleABP2(
-            TEXT("/Game/Variant_Shooter/Anims/ABP_TP_Rifle"));
+            TEXT("/Game/Variant_Shooter/Anims/ABP_TP_Rifle.ABP_TP_Rifle_C"));
         if (RifleABP2.Class)
             GetMesh()->SetAnimInstanceClass(RifleABP2.Class);
     }

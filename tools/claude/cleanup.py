@@ -43,6 +43,42 @@ for a in editor.get_all_level_actors():
     if lbl.startswith("droppedloot") or lbl.startswith("bonusdrop"):
         editor.destroy_actor(a); purged += 1
 
+# Purge ORPHAN StaticMeshActors using engine basic shapes (Cube/Cone/Sphere/Cylinder).
+# These are scenery cruft from pre-Kenney-kit iterations — thousands of them.
+# Don't touch game-class actors (ASTurret etc.) that legitimately use cubes.
+ENGINE_BASIC = {"Cube", "Cone", "Sphere", "Cylinder"}
+orphan_basic = 0
+for a in editor.get_all_level_actors():
+    if a.get_class().get_name() != "StaticMeshActor":
+        continue
+    smc = a.get_component_by_class(unreal.StaticMeshComponent)
+    if not smc: continue
+    try:
+        sm = smc.get_editor_property("static_mesh")
+    except Exception:
+        sm = None
+    if sm and sm.get_name() in ENGINE_BASIC:
+        editor.destroy_actor(a); orphan_basic += 1
+unreal.log(f"Purged {orphan_basic} orphan basic-shape StaticMeshActors")
+purged += orphan_basic
+
+# Dedupe actors at identical (class, position) — kill duplicate Relays, NPCs, doors etc.
+from collections import defaultdict
+sig_map = defaultdict(list)
+for a in editor.get_all_level_actors():
+    cls = a.get_class().get_name()
+    # Skip the bulk static mesh scenery (would falsely dedupe stacked crates etc.)
+    if cls == "StaticMeshActor": continue
+    loc = a.get_actor_location()
+    key = (cls, round(loc.x), round(loc.y), round(loc.z))
+    sig_map[key].append(a)
+pos_deduped = 0
+for key, lst in sig_map.items():
+    for extra in lst[1:]:
+        editor.destroy_actor(extra); pos_deduped += 1
+unreal.log(f"Position-deduped {pos_deduped} duplicate actors")
+deduped += pos_deduped
+
 unreal.log(f"Purged {purged} runtime-spawned actors")
 unreal.log(f"Deduped {deduped} duplicate lighting actors")
 unreal.log(f"Before/after totals:")

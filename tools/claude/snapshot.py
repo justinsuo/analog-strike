@@ -126,16 +126,36 @@ shoot("flat", unreal.SceneCaptureSource.SCS_BASE_COLOR)
 editor.destroy_actor(cap_actor)
 
 # ─── Copy the latest editor log tail ───
-log_dir = os.path.join(PROJ, "Saved", "Logs")
-logs = sorted(glob.glob(os.path.join(log_dir, "*.log")), key=os.path.getmtime, reverse=True)
+# UE writes logs to several places; try them in order. Headless -stdout runs
+# don't always populate Saved/Logs, so fall back to engine logs and _editor_run.log
+candidates = [
+    os.path.join(PROJ, "Saved", "Logs"),
+    os.path.expanduser("~/Library/Logs/Unreal Engine/AnalogStrikeEditor"),
+    os.path.expanduser("~/Library/Application Support/Epic/UnrealEngine/5.7/Saved/Logs"),
+]
+logs = []
+for d in candidates:
+    logs += glob.glob(os.path.join(d, "*.log"))
+logs.sort(key=lambda p: os.path.getmtime(p) if os.path.exists(p) else 0, reverse=True)
+written = False
 if logs:
     try:
         with open(logs[0], "r", errors="ignore") as f:
             lines = f.readlines()[-300:]
         with open(os.path.join(SNAP, "log_tail.txt"), "w") as out:
             out.writelines(lines)
-        unreal.log(f"log_tail.txt: {len(lines)} lines from {os.path.basename(logs[0])}")
+        unreal.log(f"log_tail.txt: {len(lines)} lines from {logs[0]}")
+        written = True
     except Exception as e:
         unreal.log_warning(f"log copy: {e}")
+if not written:
+    # Fallback: write whatever's in _editor_run.log (set by snapshot.sh)
+    run_log = os.path.join(SNAP, "_editor_run.log")
+    if os.path.exists(run_log):
+        shutil.copy(run_log, os.path.join(SNAP, "log_tail.txt"))
+        unreal.log("log_tail.txt: copied from _editor_run.log")
+    else:
+        with open(os.path.join(SNAP, "log_tail.txt"), "w") as out:
+            out.write(f"(No log file found on this run.\n Candidates checked: {candidates})\n")
 
 unreal.log("===== SNAPSHOT.PY DONE =====")

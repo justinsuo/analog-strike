@@ -27,7 +27,7 @@ AASEnemyBase::AASEnemyBase()
 
     // Try Manny Simple (the mesh that actually exists in this project)
     static ConstructorHelpers::FObjectFinder<USkeletalMesh> MannySM(
-        TEXT("/Game/Characters/Meshes/SKM_Manny_Simple"));
+        TEXT("/Game/Characters/Meshes/SKM_Manny_Simple.SKM_Manny_Simple"));
     if (MannySM.Succeeded())
     {
         GetMesh()->SetSkeletalMesh(MannySM.Object);
@@ -35,7 +35,7 @@ AASEnemyBase::AASEnemyBase()
 
         // Unarmed ABP for enemies (don't want them holding rifles)
         static ConstructorHelpers::FClassFinder<UAnimInstance> UnarmedABP(
-            TEXT("/Game/Characters/Anims/Unarmed/ABP_Unarmed"));
+            TEXT("/Game/Characters/Anims/Unarmed/ABP_Unarmed.ABP_Unarmed_C"));
         if (UnarmedABP.Class)
             GetMesh()->SetAnimInstanceClass(UnarmedABP.Class);
     }
